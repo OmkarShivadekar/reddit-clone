@@ -6,9 +6,15 @@ import java.util.UUID;
 
 import javax.transaction.Transactional;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.reddit.clone.dto.AuthenticationResponse;
+import com.reddit.clone.dto.LoginRequest;
 import com.reddit.clone.dto.RegisterRequest;
 import com.reddit.clone.exception.SpringRedditException;
 import com.reddit.clone.model.NotificationEmail;
@@ -16,10 +22,9 @@ import com.reddit.clone.model.User;
 import com.reddit.clone.model.VerificationToken;
 import com.reddit.clone.repository.UserRepo;
 import com.reddit.clone.repository.VerificationTokenRepo;
+import com.reddit.clone.security.JwtProvider;
 
 import lombok.AllArgsConstructor;
-
-
 
 @Service
 @AllArgsConstructor
@@ -32,6 +37,10 @@ public class AuthService {
 	private final VerificationTokenRepo verifyRepo;
 	
 	private final MailService mailService;
+	
+	private final AuthenticationManager authenticationManager;
+	
+	private final JwtProvider jwtProvider;
 	
 	
 	@Transactional
@@ -82,5 +91,17 @@ public class AuthService {
 		User user = userRepo.findByUsername(username).orElseThrow(() -> new SpringRedditException("User not found with name - "+username));
 		user.setEnabled(true);
 		userRepo.save(user);
+	}
+
+
+	public AuthenticationResponse login(LoginRequest loginRequest) {
+
+		Authentication authenticate = authenticationManager.
+			authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		
+		SecurityContextHolder.getContext().setAuthentication(authenticate);
+		String token = jwtProvider.generateToken(authenticate);
+		
+		return new AuthenticationResponse(token, loginRequest.getUsername());
 	}
 }
