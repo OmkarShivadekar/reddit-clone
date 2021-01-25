@@ -8,4 +8,6 @@ It is a full stack reddit clone where user can Login/Sign up, create posts, subr
 
 ## Database Schema Diagram
 
+!["Database Schema Diagram"](https://github.com/OmkarShivadekar/reddit-clone/blob/master/document/Schema.png)
+
 ## Screenshots
